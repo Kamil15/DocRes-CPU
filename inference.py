@@ -207,9 +207,9 @@ def appearance(model, im_path, memory_fix=0):
     # -------------------------
     in_im = in_im / 255.0
     in_im = torch.from_numpy(in_im.transpose(2, 0, 1)).unsqueeze(0)
-    in_im = in_im.half().to(DEVICE)
+    in_im = in_im.float().to(DEVICE)
 
-    model = model.half()
+    model = model.float()
     model.eval()
 
     # -------------------------
@@ -266,8 +266,8 @@ def appearance(model, im_path, memory_fix=0):
     in_im = torch.from_numpy(in_im.transpose(2,0,1)).unsqueeze(0)
 
     # inference
-    in_im = in_im.half().to(DEVICE)
-    model = model.half()
+    in_im = in_im.float().to(DEVICE)
+    model = model.float()
     with torch.no_grad():
         pred = model(in_im)
         pred = torch.clamp(pred,0,1)
@@ -313,8 +313,8 @@ def deshadowing(model,im_path,memory_fix=0):
     in_im = torch.from_numpy(in_im.transpose(2,0,1)).unsqueeze(0)
 
     # inference
-    in_im = in_im.half().to(DEVICE)
-    model = model.half()
+    in_im = in_im.float().to(DEVICE)
+    model = model.float()
     with torch.no_grad():
         pred = model(in_im)
         pred = torch.clamp(pred,0,1)
@@ -355,11 +355,11 @@ def deblurring(model,im_path,memory_fix=0):
     in_im = np.concatenate((in_im,prompt),-1)
     in_im = in_im / 255.0
     in_im = torch.from_numpy(in_im.transpose(2,0,1)).unsqueeze(0)
-    in_im = in_im.half().to(DEVICE)  
+    in_im = in_im.float().to(DEVICE)  
     # inference
     model.to(DEVICE)
     model.eval()
-    model = model.half()
+    model = model.float()
     with torch.no_grad():
         pred = model(in_im)
         pred = torch.clamp(pred,0,1)
@@ -400,8 +400,8 @@ def binarization(model,im_path,memory_fix=0):
     in_im = in_im / 255.0
     in_im = torch.from_numpy(in_im.transpose(2,0,1)).unsqueeze(0)
     in_im = in_im.to(DEVICE)
-    model = model.half()
-    in_im = in_im.half()
+    model = model.float()
+    in_im = in_im.float()
     with torch.no_grad():
         pred = model(in_im)
         pred = pred[:,:2,:,:]

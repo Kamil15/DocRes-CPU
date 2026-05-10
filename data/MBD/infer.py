@@ -34,7 +34,7 @@ def net1_net2_infer(model,img_paths,args):
         img = cvimg2torch(img)
 
         with torch.no_grad():
-            pred = seg_model(img.cuda())
+            pred = seg_model(img)
             mask_pred = pred[:,0,:,:].unsqueeze(1)
             mask_pred = F.interpolate(mask_pred,(h_org,w_org))
             mask_pred = mask_pred.squeeze(0).squeeze(0).cpu().numpy()
@@ -72,10 +72,9 @@ def net1_net2_infer_single_im(img,model_path):
                     output_stride=16,
                     sync_bn=None,
                     freeze_bn=False)
-    seg_model = torch.nn.DataParallel(seg_model, device_ids=range(torch.cuda.device_count()))
-    seg_model.cuda()
-    checkpoint = torch.load(model_path)
-    seg_model.load_state_dict(checkpoint['model_state'])
+    seg_model.cpu()
+    checkpoint = torch.load(model_path, map_location='cpu')
+    seg_model.load_state_dict({k.replace('module.', ''): v for k, v in checkpoint['model_state'].items()})
     ### validate on the real datasets
     seg_model.eval()
     ### segmentation mask predict
@@ -87,10 +86,7 @@ def net1_net2_infer_single_im(img,model_path):
     img = cvimg2torch(img)
 
     with torch.no_grad():
-        # from torchtoolbox.tools import summary
-        # print(summary(seg_model,torch.rand((1, 3, 448, 448)).cuda())) 59.4M 135.6G
-
-        pred = seg_model(img.cuda())
+        pred = seg_model(img)
         mask_pred = pred[:,0,:,:].unsqueeze(1)
         mask_pred = F.interpolate(mask_pred,(h_org,w_org))
         mask_pred = mask_pred.squeeze(0).squeeze(0).cpu().numpy()
@@ -140,12 +136,10 @@ if __name__ == '__main__':
                     output_stride=16,
                     sync_bn=None,
                     freeze_bn=False)
-    seg_model = torch.nn.DataParallel(seg_model, device_ids=range(torch.cuda.device_count()))
-    seg_model.cuda()
-    checkpoint = torch.load(args.seg_model_path)
-    seg_model.load_state_dict(checkpoint['model_state'])
+    seg_model.cpu()
+    checkpoint = torch.load(args.seg_model_path, map_location='cpu')
+    seg_model.load_state_dict({k.replace('module.', ''): v for k, v in checkpoint['model_state'].items()})
 
     im_paths = glob.glob(os.path.join(args.img_folder,'*_origin.*'))
 
     net1_net2_infer(seg_model,im_paths,args)
-
