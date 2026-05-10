@@ -1,56 +1,58 @@
-
 <div align=center>
 
-# This is a Fork of DocRes:<br>A Generalist Model Toward Unifying<br>Document Image Restoration Tasks
-[original ZZZHANG-jx DocRes](https://github.com/ZZZHANG-jx/DocRes)
+# DocRes-CPU
+
+CPU-only fork of [starinspace/DocRes-Fork](https://github.com/starinspace/DocRes-Fork), which is itself a fork of [ZZZHANG-jx/DocRes](https://github.com/ZZZHANG-jx/DocRes)
+
+[CVPR 2024] A Generalist Model Toward Unifying Document Image Restoration Tasks
+
 </div>
 
-<p align="center">
-<img width="981" height="738" alt="bild" src="https://github.com/user-attachments/assets/aeb2ddd6-94c5-4957-b8f6-b544b066a373" />
-</p>
+## Changes from starinspace/DocRes-Fork
 
-# NEW
-2026-01-23 Updated the script to fix the Cuda out of Memory.
-2026-03-03 Fixed a bug with image size problem.
-2026-03-29 Add another model support for binarization
+- **CPU-only support**: removed all CUDA hard-dependencies, runs without a GPU
+- `data/MBD/infer.py`: replaced `DataParallel`, `.cuda()`, and hardcoded CUDA `torch.load` with CPU equivalents; stripped `module.` prefix from weight keys when loading without `DataParallel`
+- `inference.py`: replaced all `.half()` (float16) calls with `.float()` (float32), as CPU PyTorch does not support float16 convolutions
+- `requirements.txt`: switched torch and torchvision to CPU builds, updated numpy and scikit-image versions to fix binary incompatibility
 
-# TO DO
-* Create GUI
+## My recommended task order
 
-## SETUP
+I could not find any recommended order for chaining tasks. The `end2end` mode only chains dewarping → deshadowing → appearance, skipping deblurring and binarization entirely.
+
+Based on what each task's prompt actually computes, my recommended order is:
+
+```
+Dewarping → Deshadowing → Appearance → Deblurring → Binarization
+```
+
+- **Dewarping** does not always give expected results. Consider skipping it or preprocessing the input image to be more suitable for the model
+- Skip **binarization** if you want color output
+- **Binarization must always be last** if used, as it converts to black-and-white irreversibly
+
+## Setup
+
+Clone the repository and enter the directory, then:
+
 ```bash
-conda create -n docresfork python=3.10.19
-conda activate docresfork
-git clone https://github.com/starinspace/DocRes-Fork
-cd DocRes-Fork
-pip install -r requirements.txt
+uv venv --python 3.10
+.venv\Scripts\activate
+uv pip install -r requirements.txt
+mkdir output
 ```
 
 1. Put MBD model weights [mbd.pkl](https://1drv.ms/f/s!Ak15mSdV3Wy4iahoKckhDPVP5e2Czw?e=iClwdK) to `./models/`
 2. Put DocRes model weights [docres.pkl](https://1drv.ms/f/s!Ak15mSdV3Wy4iahoKckhDPVP5e2Czw?e=iClwdK) to `./models/`
-3. Run the following script and the results will be saved in `./output/`. put your examples in `./input/`.
+3. Put your images in `./input/` and run:
+
 ```bash
-python inference.py --im_path ./input/for_dewarping.png --task dewarping --memory_fix 2 --save_dtsprompt 1
-```
-You can also use your model trained with traiNNer-redux.
-```bash
-python inference.py --im_path ./input/for_binarization.png --task binarization --model_path models\your_model.safetensors --memory_fix 2
+python inference.py --im_path ./input/photo.png --task deshadowing --memory_fix 2
 ```
 
-- `--memory_fix`: fix Cuda out of Memory, use _0_ = No fix (standard), recommended for normal text in big images is _1_, or _2_, for large images with very small text try _3_ = 3000px.
-- `--im_path`: the path of input document image
-- `--task`: task that need to be executed, it must be one of _binarization_, _dewarping_, _deshadowing_, _appearance_, _deblurring_, or _end2end_
-- `--save_dtsprompt`: whether to save the DTSPrompt
-  
-## CITATION
-```
-@inproceedings{zhangdocres2024, 
-Author = {Jiaxin Zhang, Dezhi Peng, Chongyu Liu , Peirong Zhang and Lianwen Jin}, 
-Booktitle = {In Proceedings of the IEEE/CV Conference on Computer Vision and Pattern Recognition}, 
-Title = {{DocRes: A Generalist Model Toward Unifying Document Image Restoration Tasks}}, 
-Year = {2024}}   
-```
+Results are saved in `./output/`.
 
-```
-Fork by = Starinspace
-```
+---
+
+## Credits
+
+- [starinspace/DocRes-Fork](https://github.com/starinspace/DocRes-Fork)
+- [ZZZHANG-jx/DocRes](https://github.com/ZZZHANG-jx/DocRes)
