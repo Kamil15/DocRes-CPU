@@ -50,6 +50,15 @@ python inference.py --im_path ./input/photo.png --task deshadowing --memory_fix 
 
 Results are saved in `./output/`.
 
+### Arguments
+
+- `--im_path`: path to the input image or folder (default: `./distorted/`)
+- `--task`: task to execute, one of `dewarping`, `deshadowing`, `appearance`, `deblurring`, `binarization`, `end2end`
+- `--memory_fix`: limits the long edge of the image to reduce memory usage. `0` = default (no limit, except appearance and deshadowing which cap at 1600px), `1` = 1500px, `2` = 2000px, `3` = 3000px
+- `--out_folder`: path to the output folder (default: `./output/`)
+- `--model_path`: path to the model checkpoint (default: `models/docres.pkl`), also accepts `.safetensors` models
+- `--save_dtsprompt`: set to `1` to save the DTSPrompt alongside the output (default: `0`)
+
 ---
 
 ## Credits
